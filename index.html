@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ARPA | Liquid Clinical Intelligence</title>
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 10% 20%, rgba(204, 251, 241, 0.7) 0%, rgba(240, 253, 250, 0.9) 40%, rgba(255, 255, 255, 0.95) 90%);
+      --liquid-teal-base: #0d9488;
+      --liquid-teal-dark: #115e59;
+      --liquid-teal-light: #14b8a6;
+      --glass-bg: rgba(255, 255, 255, 0.75);
+      --glass-bg-subtle: rgba(255, 255, 255, 0.5);
+      --glass-border: rgba(255, 255, 255, 0.85);
+      --glass-border-teal: rgba(45, 212, 191, 0.4);
+      --glass-shadow: 0 8px 32px 0 rgba(13, 148, 136, 0.08), 0 2px 8px 0 rgba(0, 0, 0, 0.04);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --danger-glass: rgba(244, 63, 94, 0.12);
+      --danger-border: rgba(244, 63, 94, 0.35);
+      --danger-text: #e11d48;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif; -webkit-font-smoothing: antialiased; }
+
+    body {
+      background: #f0fdfa;
+      background-image: var(--bg-gradient);
+      min-height: 100vh;
+      color: var(--text-main);
+      padding: 1.5rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .ambient-sphere-1 { position: fixed; top: -80px; left: -80px; width: 320px; height: 320px; background: radial-gradient(circle, rgba(45, 212, 191, 0.35) 0%, rgba(20, 184, 166, 0) 70%); filter: blur(40px); z-index: -1; pointer-events: none; }
+    .ambient-sphere-2 { position: fixed; bottom: -60px; right: -60px; width: 360px; height: 360px; background: radial-gradient(circle, rgba(94, 234, 212, 0.4) 0%, rgba(13, 148, 136, 0) 70%); filter: blur(50px); z-index: -1; pointer-events: none; }
+
+    .container { max-width: 960px; width: 100%; display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .glass-card { background: var(--glass-bg); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid var(--glass-border); border-radius: 20px; padding: 1.4rem 1.6rem; box-shadow: var(--glass-shadow); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+
+    .brand-header { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 24px; padding: 1.25rem 1.75rem; box-shadow: 0 10px 30px rgba(13, 148, 136, 0.08); }
+    .brand-title-group { display: flex; align-items: center; gap: 1rem; }
+    .brand-logo-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #2dd4bf 0%, #0d9488 100%); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; color: #ffffff; box-shadow: 0 6px 16px rgba(13, 148, 136, 0.28); }
+
+    .brand-h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: #0f172a; }
+    .brand-sub { font-size: 0.82rem; color: var(--liquid-teal-dark); font-weight: 600; }
+    
+    .powered-by { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--liquid-teal-dark); background: rgba(45, 212, 191, 0.15); padding: 0.4rem 0.9rem; border-radius: 30px; border: 1px solid rgba(45, 212, 191, 0.3); font-weight: 700; }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.9rem; }
+    label { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    
+    textarea, input[type="text"], input[type="number"], select { width: 100%; background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(203, 213, 225, 0.8); color: var(--text-main); padding: 0.85rem; border-radius: 14px; font-size: 0.95rem; outline: none; }
+
+    .suggestion-chip { background: #e0f2fe; border: 1px solid #bae6fd; color: #0369a1; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.8rem; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem; transition: all 0.2s; }
+    .suggestion-chip:hover { background: #bae6fd; transform: translateY(-1px); }
+    .chip-sub { font-size: 0.65rem; color: #0284c7; font-weight: 400; }
+
+    .patient-grid { display: grid; grid-template-columns: 140px 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .checkbox-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.65rem; background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(203, 213, 225, 0.8); border-radius: 14px; padding: 0.85rem 1rem; }
+    .checkbox-item { display: flex; align-items: center; gap: 0.45rem; font-size: 0.84rem; font-weight: 600; cursor: pointer; color: var(--text-main); }
+    .checkbox-item input { accent-color: var(--liquid-teal-base); width: 17px; height: 17px; cursor: pointer; }
+
+    .btn-main { background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%); color: #ffffff; border: none; padding: 0.95rem; border-radius: 16px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 8px 20px rgba(13, 148, 136, 0.28); transition: all 0.2s; }
+    .btn-main:active { transform: scale(0.98); }
+
+    .btn-liquid { border: none; padding: 0.5rem 0.9rem; border-radius: 10px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
+    .btn-cam { background: rgba(255, 255, 255, 0.85); color: var(--liquid-teal-dark); border: 1px solid var(--glass-border-teal); }
+
+    .btn-bio-trigger { background: linear-gradient(135deg, #0f766e 0%, #115e59 100%); color: #ffffff; border: 1px solid rgba(45, 212, 191, 0.5); padding: 0.55rem 1rem; border-radius: 12px; font-size: 0.82rem; font-weight: 700; cursor: pointer; margin-top: 0.75rem; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2); }
+
+    .master-risk-card { background: rgba(255, 255, 255, 0.95); border: 1.5px solid rgba(45, 212, 191, 0.6); border-radius: 18px; padding: 1.25rem 1.5rem; margin-bottom: 1.2rem; box-shadow: 0 6px 20px rgba(13, 148, 136, 0.08); }
+    .gauge-wrapper { position: relative; width: 100%; height: 24px; display: flex; flex-direction: column; justify-content: center; }
+    .gauge-track { height: 10px; width: 100%; border-radius: 10px; background: linear-gradient(to right, #10b981 0%, #84cc16 28%, #facc15 52%, #fb923c 75%, #ef4444 100%); box-shadow: inset 0 1px 3px rgba(0,0,0,0.15); }
+    .gauge-needle { position: absolute; top: -2px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; }
+    .gauge-pointer-icon { font-size: 0.95rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25)); }
+
+    .drug-profile-card { background: rgba(255, 255, 255, 0.94); border: 1px solid rgba(203, 213, 225, 0.85); border-radius: 18px; padding: 1.25rem 1.4rem; margin-top: 0.85rem; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03); }
+    .side-effect-item { font-size: 0.82rem; color: #334155; margin-bottom: 0.25rem; display: flex; align-items: baseline; gap: 0.4rem; }
+    .black-box-card { background: #fff1f2; border: 1.2px solid #f43f5e; color: #9f1239; border-radius: 12px; padding: 0.6rem 0.8rem; font-size: 0.82rem; font-weight: 700; margin-top: 0.6rem; }
+
+    .risk-meter-container { margin-top: 0.75rem; margin-bottom: 0.75rem; background: rgba(248, 250, 252, 0.9); border: 1px solid rgba(226, 232, 240, 0.9); border-radius: 14px; padding: 0.75rem 1rem; }
+    .risk-meter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+
+    .risk-badge { font-size: 0.72rem; font-weight: 800; padding: 0.2rem 0.55rem; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .risk-LOW { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .risk-MODERATE { background: #fef9c3; color: #a16207; border: 1px solid #fde047; }
+    .risk-HIGH { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
+    .risk-CRITICAL { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .risk-UNMAPPED { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+
+    .route-badge { font-size: 0.68rem; font-weight: 800; padding: 0.18rem 0.5rem; border-radius: 6px; text-transform: uppercase; }
+    .route-oral { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .route-topical { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    .tier-badge { font-size: 0.68rem; font-weight: 800; padding: 0.18rem 0.5rem; border-radius: 6px; }
+    .tier-TIER_1_FULL { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .tier-TIER_2_PARTIAL { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+    .tier-TIER_3_UNMAPPED { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+    .citation-tag { font-size: 0.7rem; color: #64748b; font-style: italic; display: inline-block; margin-top: 0.35rem; }
+
+    .pediatric-badge { font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 8px; display: inline-block; }
+    .ped-SAFE { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .ped-CAUTION { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .ped-CONTRAINDICATED { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+    .alert-card { border-left: 4px solid #f43f5e; background: var(--danger-glass); border-top: 1px solid var(--danger-border); border-right: 1px solid var(--danger-border); border-bottom: 1px solid var(--danger-border); padding: 1.2rem; border-radius: 16px; margin-top: 0.85rem; }
+    .badge { padding: 0.25rem 0.55rem; border-radius: 8px; font-size: 0.72rem; font-weight: 800; }
+    .badge-HIGH { background: #f43f5e; color: #fff; }
+    .badge-FATAL { background: #9f1239; color: #fff; }
+    .badge-MEDIUM { background: #f59e0b; color: #fff; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(14px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 1rem; }
+    .modal-content { background: rgba(255, 255, 255, 0.96); border-radius: 24px; max-width: 780px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 1.75rem; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(226, 232, 240, 0.8); padding-bottom: 0.75rem; margin-bottom: 1.25rem; }
+    .modal-title { font-size: 1.25rem; font-weight: 800; color: #0f766e; }
+    .close-btn { background: none; border: none; font-size: 1.6rem; color: #94a3b8; cursor: pointer; }
+    .bio-subtitle { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; color: #0d9488; margin-bottom: 0.35rem; font-weight: 700; }
+    .bio-text { font-size: 0.92rem; line-height: 1.55; color: #334155; }
+    .bio-steps { padding-left: 1.2rem; margin-top: 0.4rem; }
+    .bio-steps li { font-size: 0.88rem; margin-bottom: 0.45rem; color: #475569; line-height: 1.45; }
+    .bio-tag { background: rgba(20, 184, 166, 0.1); color: #0f766e; padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.75rem; border: 1px solid rgba(20, 184, 166, 0.3); display: inline-block; margin-right: 0.4rem; margin-top: 0.3rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="ambient-sphere-1"></div>
+  <div class="ambient-sphere-2"></div>
+
+  <div class="container">
+    <div class="brand-header">
+      <div class="brand-title-group">
+        <div class="brand-logo-icon">&#10010;</div>
+        <div>
+          <div class="brand-h1">ARPA</div>
+          <div class="brand-sub">Arkaya Rational Prescription Algorithm</div>
+        </div>
+      </div>
+      <div class="powered-by">Arkaya Healthcare</div>
+    </div>
+
+    <div class="glass-card">
+      
+      <!-- ==============================================
+           NEW FEATURE: Smart Stylus Pad
+           ============================================== -->
+      <div class="form-group">
+        <label>Smart Stylus Pad (Draw formulation name)</label>
+        <div style="position: relative; width: 100%; height: 160px; background: rgba(255, 255, 255, 0.9); border: 1.5px dashed var(--glass-border-teal); border-radius: 14px; overflow: hidden; touch-action: none;">
+          <canvas id="handwritingCanvas" style="width: 100%; height: 100%; cursor: crosshair;"></canvas>
+          <button onclick="clearCanvas()" style="position: absolute; top: 8px; right: 8px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer; font-weight:bold; color:#475569;">Clear</button>
+        </div>
+        <div id="suggestionsTray" style="min-height: 32px; margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+           <span style="font-size:0.75rem; color:#94a3b8; font-style:italic;">Write medicine name above with finger or stylus...</span>
+        </div>
+      </div>
+      <!-- ============================================== -->
+
+      <div class="form-group">
+        <label>Prescription Drug List (Comma Separated Formulations)</label>
+        <textarea id="medInputs" rows="3" placeholder="e.g. Telma 40, Combiflam, Atorva 20, Aceclo SR, Claribid 500, Volini Gel"></textarea>
+      </div>
+
+      <div class="patient-grid">
+        <div class="form-group">
+          <label>Patient Age</label>
+          <input type="number" id="patientAge" value="28" min="0" max="110" />
+        </div>
+        <div class="form-group">
+          <label>Clinical Comorbidities & Risk Factors</label>
+          <div class="checkbox-group">
+            
+            <!-- ==============================================
+                 NEW FEATURE: Trimester & eGFR Selectors
+                 ============================================== -->
+            <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                <label class="checkbox-item"><input type="checkbox" id="isPregnant" onchange="togglePregOptions()" /> Pregnancy</label>
+                <div id="pregOptions" style="display:none; margin-left:1.5rem;">
+                    <label style="font-size:0.7rem; color:#64748b; font-weight:700;">Trimester:</label>
+                    <select id="pregTrimester" style="padding:0.2rem; font-size:0.75rem; border-radius:6px; outline:none; border:1px solid #cbd5e1;">
+                        <option value="1">1st Trimester</option>
+                        <option value="2">2nd Trimester</option>
+                        <option value="3">3rd Trimester</option>
+                    </select>
+                </div>
+            </div>
+            
+            <label class="checkbox-item"><input type="checkbox" id="isLactating" /> Lactation</label>
+            
+            <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                <label class="checkbox-item"><input type="checkbox" id="hasRenal" onchange="toggleRenalOptions()" /> Renal Impairment</label>
+                <div id="renalOptions" style="display:none; margin-left:1.5rem;">
+                    <label style="font-size:0.7rem; color:#64748b; font-weight:700;">eGFR (mL/min):</label>
+                    <input type="number" id="egfrValue" value="45" style="padding:0.2rem; font-size:0.75rem; border-radius:6px; width:70px; outline:none; border:1px solid #cbd5e1;" />
+                </div>
+            </div>
+            <!-- ============================================== -->
+
+            <label class="checkbox-item"><input type="checkbox" id="hasLiver" /> Hepatic Dysfunction</label>
+            <label class="checkbox-item"><input type="checkbox" id="hasCVD" /> Cardiac / Long-QT</label>
+            <label class="checkbox-item"><input type="checkbox" id="hasPUD" /> Peptic Ulcer / GI Bleed</label>
+            <label class="checkbox-item"><input type="checkbox" id="hasAsthma" /> Asthma / COPD</label>
+            <label class="checkbox-item"><input type="checkbox" id="hasG6PD" /> G6PD Deficiency</label>
+            <label class="checkbox-item"><input type="checkbox" id="hasDiabetes" /> Diabetes Mellitus</label>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-main" onclick="checkPrescription()">EXECUTE CLINICAL SAFETY AUDIT</button>
+    </div>
+
+    <div id="resultsContainer" class="glass-card" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(226, 232, 240, 0.8); padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="color: #0f172a; font-size: 1.15rem; font-weight: 800;">ARPA Clinical Findings & Risk Evaluation</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted);" id="auditSubtitle">Adverse Tendency Spectrum & Risk Profiling</p>
+        </div>
+        <button id="pdfDownloadBtn" class="btn-liquid btn-cam" onclick="downloadPDF()">📄 Download PDF</button>
+      </div>
+
+      <!-- Original NTI Box -->
+      <div id="ntiCard" style="display:none; background: #faf5ff; border: 1.5px solid #a855f7; border-radius: 14px; padding: 0.85rem 1.2rem; margin-bottom: 1rem;">
+        <div style="font-weight: 800; color: #7e22ce; font-size: 0.85rem; margin-bottom: 0.2rem;">
+          🧬 NARROW THERAPEUTIC INDEX (NTI) DRUGS DETECTED — TDM MANDATORY
+        </div>
+        <div id="ntiDetails" style="font-size: 0.82rem; color: #581c87; line-height: 1.45;"></div>
+      </div>
+
+      <!-- Original Out of Scope Box -->
+      <div id="outOfScopeBox" style="display:none; background:#fffbeb; border:1.5px solid #f59e0b; border-radius:14px; padding:0.85rem 1.2rem; margin-bottom:1rem;">
+        <div style="font-weight:800; color:#b45309; font-size:0.85rem; margin-bottom:0.2rem;">
+          ⚠️ PARTIAL CLINICAL RULE COVERAGE (OUT-OF-SCOPE MOLECULES DETECTED)
+        </div>
+        <p style="font-size:0.82rem; color:#78350f; line-height:1.4;">
+          The following molecules are indexed in database catalogs but lack fully verified clinical collision rules in ARPA Core: <strong id="outOfScopeList"></strong>. 
+          <em>Do NOT assume safety based on lack of alerts. Clinician independent verification mandatory.</em>
+        </p>
+      </div>
+
+      <!-- Original Master Risk Card -->
+      <div id="masterRiskCard" class="master-risk-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+          <span style="font-size:0.85rem; font-weight:800; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em;">Cumulative Prescription Safety Index</span>
+          <span id="masterRiskBadge" class="risk-badge">CALCULATING...</span>
+        </div>
+        <div class="gauge-wrapper">
+          <div class="gauge-track"></div>
+          <div class="gauge-needle" id="masterNeedle" style="left: 15%;">
+            <span class="gauge-pointer-icon">📍</span>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#64748b; font-weight:700; margin-top:0.25rem;">
+          <span>0 (MILD / SAFE)</span>
+          <span>50 (MODERATE)</span>
+          <span>100 (CRITICAL HAZARD)</span>
+        </div>
+      </div>
+
+      <div id="resolvedDrugs"></div>
+      <div id="alertsContainer"></div>
+
+      <div style="margin-top:1.5rem; padding-top:0.85rem; border-top:1px solid #e2e8f0; font-size:0.72rem; color:#64748b; line-height:1.45; text-align:center;">
+        ⚖️ <strong>Medicolegal Notice:</strong> ARPA is an auxiliary clinical decision support system (CDSS) designed exclusively for licensed medical practitioners. It does not replace independent clinical evaluation or professional diagnostic discretion.
+      </div>
+    </div>
+  </div>
+
+  <!-- Original Deep Biochemical Modal -->
+  <div id="bioModal" class="modal-overlay" onclick="closeBioModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="bioModalTitle">Biochemical & Molecular Pathway</div>
+          <div style="font-size: 0.82rem; color: #64748b; margin-top: 2px;" id="bioModalConflict">Conflict Analysis</div>
+        </div>
+        <button class="close-btn" onclick="closeBioModal(null)">&times;</button>
+      </div>
+      
+      <div style="margin-bottom: 1.25rem;">
+        <div class="bio-subtitle">🔬 Primary Molecular Mechanism</div>
+        <p class="bio-text" id="bioPrimaryMech"></p>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <div class="bio-subtitle">⚙️ Cytopathic & Biochemical Cascade</div>
+        <ol class="bio-steps" id="bioStepsList"></ol>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <div class="bio-subtitle">⚠️ Micro-Possibilities & Clinical Sub-Sequelae</div>
+        <ul class="bio-steps" id="bioPossibilitiesList" style="list-style-type: disc;"></ul>
+      </div>
+
+      <div>
+        <div class="bio-subtitle">🧬 Molecular Targets & Receptors</div>
+        <div id="bioReceptorsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // A. HANDWRITING STYLUS LOGIC (NEW INJECTED)
+    // ==========================================
+    const canvas = document.getElementById("handwritingCanvas");
+    const ctx = canvas.getContext("2d");
+    let isDrawing = false;
+    let strokeTimeout = null;
+    
+    let currentStroke = [[], [], []];
+    let allStrokes = [];
+    let strokeStartTime = 0;
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      ctx.lineWidth = 4.0;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#0f172a";
+    }
+    window.addEventListener("resize", resizeCanvas);
+    setTimeout(resizeCanvas, 150);
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    function startDraw(e) {
+      isDrawing = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      currentStroke = [[Math.round(pos.x)], [Math.round(pos.y)], [0]];
+      strokeStartTime = Date.now();
+      clearTimeout(strokeTimeout);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      currentStroke[0].push(Math.round(pos.x));
+      currentStroke[1].push(Math.round(pos.y));
+      currentStroke[2].push(Date.now() - strokeStartTime);
+    }
+
+    function stopDraw() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      if (currentStroke[0].length > 0) { allStrokes.push(currentStroke); }
+      clearTimeout(strokeTimeout);
+      strokeTimeout = setTimeout(recognizeCursiveStrokes, 700);
+    }
+
+    canvas.addEventListener("mousedown", startDraw);
+    canvas.addEventListener("mousemove", draw);
+    window.addEventListener("mouseup", stopDraw);
+    canvas.addEventListener("touchstart", startDraw, { passive: false });
+    canvas.addEventListener("touchmove", draw, { passive: false });
+    window.addEventListener("touchend", stopDraw);
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      allStrokes = [];
+      document.getElementById("suggestionsTray").innerHTML = '<span style="font-size:0.75rem; color:#94a3b8; font-style:italic;">Write medicine name above with finger or stylus...</span>';
+    }
+
+    async function recognizeCursiveStrokes() {
+      if (allStrokes.length === 0) return;
+      const tray = document.getElementById("suggestionsTray");
+      tray.innerHTML = "⏳ <em style='font-size:0.78rem; color:#0d9488;'>Interpreting handwriting...</em>";
+
+      try {
+        const payload = { strokes: allStrokes, canvas_w: canvas.width, canvas_h: canvas.height };
+        // API LINK 1 UPDATED HERE
+        const response = await fetch("http://127.0.0.1:8000/predict-handwriting", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+        });
+
+        const matchData = await response.json();
+        const suggestions = matchData.suggestions || [];
+
+        if (suggestions.length > 0) {
+          tray.innerHTML = "";
+          suggestions.forEach(item => {
+            const btn = document.createElement("button");
+            btn.className = "suggestion-chip";
+            btn.innerHTML = `<span>${item.brand}</span> <span class="chip-sub">(${item.salts})</span>`;
+            btn.onclick = () => selectMedicine(item.brand);
+            tray.appendChild(btn);
+          });
+        } else {
+          tray.innerHTML = "<span style='font-size:0.78rem; color:#ef4444;'>⚠️ Could not match drug brand. Type name below.</span>";
+        }
+      } catch (err) {
+        tray.innerHTML = "<span style='font-size:0.78rem; color:#64748b;'>Service offline. Type brand directly.</span>";
+      }
+    }
+
+    function selectMedicine(brandName) {
+      const input = document.getElementById("medInputs");
+      const current = input.value.trim();
+      input.value = current.length > 0 ? current + ", " + brandName : brandName;
+      clearCanvas();
+      checkPrescription(); 
+    }
+
+    // ==========================================
+    // B. ORIGINAL MODAL LOGIC & TOGGLES
+    // ==========================================
+    let currentAlertsData = [];
+
+    function togglePregOptions() {
+        document.getElementById('pregOptions').style.display = document.getElementById('isPregnant').checked ? 'block' : 'none';
+    }
+    function toggleRenalOptions() {
+        document.getElementById('renalOptions').style.display = document.getElementById('hasRenal').checked ? 'block' : 'none';
+    }
+
+    function openBioModal(alertIndex) {
+      const alert = currentAlertsData[alertIndex];
+      if (!alert) return;
+
+      const bio = alert.biochemistry || {
+        title: "Biochemical & Physiological Pathway",
+        primary_mechanism: alert.description || "Direct pharmacological and molecular mechanism.",
+        biochemical_steps: [
+          "1. Active drug molecule binds to the target receptor / cellular enzyme.",
+          "2. Downstream signalling cascade or clearance pathway is altered.",
+          "3. Clinical contraindication or interaction manifests."
+        ],
+        micro_possibilities: [
+          "Potential localized tissue toxicity or systemic exposure elevation.",
+          "Elevated risk when combined with pre-existing metabolic vulnerabilities."
+        ],
+        affected_receptors: ["Target Receptor / Enzyme Substrate"]
+      };
+
+      document.getElementById("bioModalTitle").innerText = bio.title || "Biochemical Pathway";
+      document.getElementById("bioModalConflict").innerText = alert.conflict_between || "Pharmacological Interaction";
+      document.getElementById("bioPrimaryMech").innerText = bio.primary_mechanism || "N/A";
+
+      const stepsList = document.getElementById("bioStepsList");
+      stepsList.innerHTML = "";
+      (bio.biochemical_steps || []).forEach(step => {
+        const li = document.createElement("li");
+        li.innerText = step;
+        stepsList.appendChild(li);
+      });
+
+      const possList = document.getElementById("bioPossibilitiesList");
+      possList.innerHTML = "";
+      (bio.micro_possibilities || []).forEach(p => {
+        const li = document.createElement("li");
+        li.innerText = p;
+        possList.appendChild(li);
+      });
+
+      const recList = document.getElementById("bioReceptorsList");
+      recList.innerHTML = "";
+      (bio.affected_receptors || []).forEach(r => {
+        const span = document.createElement("span");
+        span.className = "bio-tag";
+        span.innerText = r;
+        recList.appendChild(span);
+      });
+
+      document.getElementById("bioModal").style.display = "flex";
+    }
+
+    function closeBioModal(event) {
+      document.getElementById("bioModal").style.display = "none";
+    }
+
+    function getPatientProfile() {
+      return {
+        age: parseInt(document.getElementById("patientAge").value) || 28,
+        is_pregnant: document.getElementById("isPregnant").checked,
+        pregnancy_trimester: parseInt(document.getElementById("pregTrimester").value) || 0,
+        is_lactating: document.getElementById("isLactating").checked,
+        has_renal_disease: document.getElementById("hasRenal").checked,
+        egfr_value: parseFloat(document.getElementById("egfrValue").value) || 90.0,
+        has_liver_disease: document.getElementById("hasLiver").checked,
+        has_cardiac_disease: document.getElementById("hasCVD").checked,
+        has_pud_disease: document.getElementById("hasPUD").checked,
+        has_asthma: document.getElementById("hasAsthma").checked,
+        has_g6pd_deficiency: document.getElementById("hasG6PD").checked,
+        has_diabetes: document.getElementById("hasDiabetes").checked
+      };
+    }
+
+    async function checkPrescription() {
+      const rawText = document.getElementById("medInputs").value;
+      const medicines = rawText.split(",").map(m => m.trim()).filter(m => m.length > 0);
+      const patient = getPatientProfile();
+
+      if (medicines.length === 0) return;
+
+      // API LINK 2 UPDATED HERE
+      const res = await fetch("http://127.0.0.1:8000/check-prescription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ medicines, patient })
+      });
+
+      const data = await res.json();
+      currentAlertsData = data.alerts || [];
+      renderResults(data);
+    }
+
+    function getRiskBadgeClass(level) {
+      if (!level || level === "NOT APPLICABLE") return "risk-UNMAPPED";
+      if (level.includes("CRITICAL") || level.includes("FATAL") || level.includes("HIGH") || level.includes("NTI")) {
+        return (level.includes("CRITICAL") || level.includes("FATAL")) ? "risk-CRITICAL" : "risk-HIGH";
+      }
+      if (level.includes("MODERATE") || level.includes("MEDIUM") || level.includes("PARTIAL")) return "risk-MODERATE";
+      return "risk-LOW";
+    }
+
+    // ==========================================
+    // C. ORIGINAL DETAILED RENDER FUNCTION
+    // ==========================================
+    function renderResults(data) {
+      const container = document.getElementById("resultsContainer");
+      const resolvedDiv = document.getElementById("resolvedDrugs");
+      const alertsDiv = document.getElementById("alertsContainer");
+      
+      container.style.display = "block";
+      resolvedDiv.innerHTML = "";
+      alertsDiv.innerHTML = "";
+
+      const isPediatric = data.is_pediatric;
+      document.getElementById("auditSubtitle").innerText = isPediatric 
+        ? `👶 Pediatric Clinical Audit (Patient Age: ${data.patient_age} Years)`
+        : `👤 Adult Pharmacological & Safety Audit (Patient Age: ${data.patient_age} Years)`;
+
+      const ntiCard = document.getElementById("ntiCard");
+      const ntiDetails = document.getElementById("ntiDetails");
+      if (data.nti_detected_drugs && data.nti_detected_drugs.length > 0) {
+        ntiCard.style.display = "block";
+        let ntiHtml = "<ul style='padding-left:1.2rem; margin-top:0.3rem;'>";
+        data.nti_detected_drugs.forEach(item => {
+          ntiHtml += `<li style='margin-bottom:0.25rem;'><strong>${item.salt}</strong> (Target Serum: ${item.range}): ${item.hazard}</li>`;
+        });
+        ntiHtml += "</ul><div style='margin-top:0.45rem; font-weight:700; color:#6b21a8;'>⚠️ Algorithmic limitation: Rule engine cannot calculate non-linear elimination or free-fraction displacement. Therapeutic Drug Monitoring (TDM) mandatory.</div>";
+        ntiDetails.innerHTML = ntiHtml;
+      } else {
+        ntiCard.style.display = "none";
+      }
+
+      const scopeBox = document.getElementById("outOfScopeBox");
+      if (data.out_of_scope_drugs && data.out_of_scope_drugs.length > 0) {
+        scopeBox.style.display = "block";
+        document.getElementById("outOfScopeList").innerText = data.out_of_scope_drugs.join(", ");
+      } else {
+        scopeBox.style.display = "none";
+      }
+
+      const masterScore = data.cumulative_risk_score !== undefined ? data.cumulative_risk_score : 20;
+      const masterLevel = data.cumulative_risk_level || "EVALUATED";
+      const masterBadge = document.getElementById("masterRiskBadge");
+      const masterNeedle = document.getElementById("masterNeedle");
+
+      masterBadge.className = `risk-badge ${getRiskBadgeClass(masterLevel)}`;
+      masterBadge.innerText = `${masterLevel} (${masterScore}/100)`;
+      masterNeedle.style.left = `${masterScore}%`;
+
+      data.prescribed_drugs.forEach(d => {
+        const card = document.createElement("div");
+        card.className = "drug-profile-card";
+        const drugRoute = d.route || "oral";
+
+        let profilesHtml = "";
+        (d.clinical_profiles || []).forEach(prof => {
+          const isUnmapped = prof.risk_score === null;
+          const riskClass = getRiskBadgeClass(prof.risk_level);
+          const riskScore = prof.risk_score;
+          const covTier = prof.coverage_tier || "TIER_1_FULL";
+
+          let pedBadgeClass = "ped-SAFE";
+          if (prof.pediatric_safety && (prof.pediatric_safety.includes("CONTRAINDICATED") || prof.pediatric_safety.includes("BANNED"))) {
+            pedBadgeClass = "ped-CONTRAINDICATED";
+          } else if (prof.pediatric_safety && (prof.pediatric_safety.includes("CAUTION") || prof.pediatric_safety.includes("HIGH-RISK") || prof.pediatric_safety.includes("Specialist"))) {
+            pedBadgeClass = "ped-CAUTION";
+          }
+
+          let sideEffectsHtml = "";
+          if (prof.side_effects && prof.side_effects.length > 0) {
+            sideEffectsHtml = (prof.side_effects || []).map(se => `<div class="side-effect-item">⚠️ <span>${se}</span></div>`).join("");
+          } else {
+            sideEffectsHtml = `<div style="font-size:0.8rem; color:#64748b; font-style:italic;">No documented adverse tendencies for this unindexed molecule.</div>`;
+          }
+          
+          let blackBoxHtml = prof.black_box_warning ? `
+            <div class="black-box-card">
+              🚨 <strong>Black Box Alert:</strong> ${prof.black_box_warning}
+            </div>
+          ` : "";
+
+          let pedDosingHtml = (isPediatric && prof.pediatric_dosage) ? `
+            <div style="background:rgba(20,184,166,0.08); border-left:3px solid #14b8a6; padding:0.45rem 0.65rem; border-radius:6px; font-size:0.8rem; margin-top:0.45rem; color:#0f766e;">
+              ⚖️ <strong>Pediatric Dosage Rule:</strong> ${prof.pediatric_dosage}
+            </div>
+          ` : "";
+
+          let pedBadgeHeader = (isPediatric && prof.pediatric_safety) ? `
+            <span class="pediatric-badge ${pedBadgeClass}">${prof.pediatric_safety}</span>
+          ` : "";
+
+          let citationHtml = prof.evidence_citation ? `
+            <div class="citation-tag">📚 Evidence: ${prof.evidence_citation}</div>
+          ` : "";
+
+          let gaugeBlockHtml = "";
+          if (!isUnmapped) {
+            gaugeBlockHtml = `
+              <div class="risk-meter-container">
+                <div class="risk-meter-header">
+                  <span style="font-size:0.75rem; font-weight:700; color:#475569;">Adverse Risk Intensity:</span>
+                  <span class="risk-badge ${riskClass}">${prof.risk_level} (${riskScore}/100)</span>
+                </div>
+                
+                <div class="gauge-wrapper">
+                  <div class="gauge-track"></div>
+                  <div class="gauge-needle" style="left: ${riskScore}%;">
+                    <span class="gauge-pointer-icon">📍</span>
+                  </div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:#94a3b8; font-weight:700; margin-top:0.2rem;">
+                  <span>MILD (0)</span>
+                  <span>MODERATE (50)</span>
+                  <span>CRITICAL (100)</span>
+                </div>
+              </div>
+            `;
+          } else {
+            gaugeBlockHtml = `
+              <div class="risk-meter-container" style="background:#f8fafc; border:1px dashed #cbd5e1;">
+                <div class="risk-meter-header">
+                  <span style="font-size:0.75rem; font-weight:700; color:#64748b;">Adverse Risk Intensity:</span>
+                  <span class="risk-badge risk-UNMAPPED">NOT APPLICABLE (N/A)</span>
+                </div>
+                <div style="font-size:0.78rem; color:#64748b; font-style:italic; padding:0.2rem 0;">
+                  ⚪ <em>Risk meter deactivated: Input is not an indexed active chemical entity.</em>
+                </div>
+              </div>
+            `;
+          }
+
+          profilesHtml += `
+            <div style="margin-top:0.85rem; padding-top:0.85rem; border-top:1px dashed rgba(203,213,225,0.7);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                <div>
+                  <span style="font-weight:800; color:#0f766e; font-size:0.95rem;">• ${prof.salt} <font size="1" color="#64748b">(${prof.class})</font></span>
+                  <span class="tier-badge tier-${covTier}" style="margin-left:0.4rem;">${covTier.replace('_', ' ')}</span>
+                </div>
+                ${pedBadgeHeader}
+              </div>
+
+              ${gaugeBlockHtml}
+              ${pedDosingHtml}
+              
+              <div style="margin-top:0.55rem;">
+                <div style="font-size:0.72rem; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:0.25rem;">Adverse Tendencies & Toxicological Profile:</div>
+                ${sideEffectsHtml}
+              </div>
+
+              ${blackBoxHtml}
+
+              <div style="font-size:0.78rem; color:#0d9488; margin-top:0.45rem; font-weight:600;">
+                💡 <strong>Clinical Guidance & Precaution:</strong> ${prof.prophylaxis}
+              </div>
+              ${citationHtml}
+            </div>
+          `;
+        });
+
+        const routeBadgeClass = drugRoute === "topical" ? "route-topical" : "route-oral";
+        const routeLabel = drugRoute === "topical" ? "🧴 Topical Formulation" : "💊 Systemic Formulation";
+
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:1.1rem; color:#0f172a;">${d.brand}</strong>
+              <span class="route-badge ${routeBadgeClass}" style="margin-left:0.5rem;">${routeLabel}</span>
+            </div>
+            <span style="font-size:0.75rem; font-weight:700; background:rgba(13,148,136,0.12); color:#0d9488; padding:0.2rem 0.6rem; border-radius:10px;">Audit Complete</span>
+          </div>
+          ${profilesHtml}
+        `;
+        resolvedDiv.appendChild(card);
+      });
+
+      if (!data.alerts || data.alerts.length === 0) {
+        if (data.audit_verdict === "CONDITIONAL_PASS") {
+          alertsDiv.innerHTML = `
+            <div style="background:#fefce8; border:1.5px solid #eab308; border-radius:14px; padding:1.1rem; margin-top:1rem;">
+              <h4 style="color:#a16207; font-weight:800; font-size:0.95rem;">🟡 ARPA Conditional Pass (Partial Surveillance)</h4>
+              <p style="font-size:0.85rem; color:#713f12; margin-top:0.35rem; line-height:1.45;">
+                No fatal contraindications detected across primary systemic collision rules. However, one or more prescribed molecules belong to <strong>TIER-2 Partial Surveillance</strong>.
+              </p>
+            </div>
+          `;
+        } else if (data.audit_verdict === "OUT_OF_SCOPE") {
+          alertsDiv.innerHTML = `
+            <div style="background:#fff7ed; border:1.5px solid #f97316; border-radius:14px; padding:1.1rem; margin-top:1rem;">
+              <h4 style="color:#c2410c; font-weight:800; font-size:0.95rem;">🟠 ARPA Inconclusive (Unmapped Entities)</h4>
+              <p style="font-size:0.85rem; color:#7c2d12; margin-top:0.35rem; line-height:1.45;">
+                One or more active chemical entities could not be resolved to verified WHO-ATC therapeutic classes. Full prescription safety cannot be certified.
+              </p>
+            </div>
+          `;
+        } else if (data.audit_verdict === "NTI_CAUTION") {
+          alertsDiv.innerHTML = `
+            <div style="background:#faf5ff; border:1.5px solid #a855f7; border-radius:14px; padding:1.1rem; margin-top:1rem;">
+              <h4 style="color:#7e22ce; font-weight:800; font-size:0.95rem;">🟣 ARPA NTI Surveillance Active</h4>
+              <p style="font-size:0.85rem; color:#581c87; margin-top:0.35rem; line-height:1.45;">
+                Narrow Therapeutic Index drug regimen in progress. Systemic safety is contingent upon strict plasma level monitoring (TDM).
+              </p>
+            </div>
+          `;
+        } else {
+          alertsDiv.innerHTML = `<p style="color: #0d9488; margin-top: 1rem; font-weight: 700; background:#f0fdfa; padding:1rem; border:1px solid #ccfbf1; border-radius:12px;">✓ ARPA Clear: Comprehensive clinical evaluation complete. Zero systemic contraindications detected.</p>`;
+        }
+        return;
+      }
+
+      data.alerts.forEach((a, index) => {
+        const card = document.createElement("div");
+        card.className = `alert-card`;
+        const alertCitation = a.evidence_citation ? `<div style="font-size:0.72rem; color:#9f1239; font-style:italic; margin-top:0.35rem;">📚 Clinical Authority: ${a.evidence_citation}</div>` : "";
+
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h4 style="color: #9f1239; font-weight:800;">${a.effect}</h4>
+            <span class="badge badge-${a.severity}">${a.severity}</span>
+          </div>
+          <p style="font-size: 0.85rem; color: #0f172a; margin: 0.35rem 0; font-weight:700;">Trigger: ${a.conflict_between}</p>
+          <p style="font-size: 0.9rem; color: #334155; margin: 0.35rem 0;">${a.description}</p>
+          <p style="font-size: 0.85rem; color: #b45309; font-weight: 700;">Clinical Action: ${a.action}</p>
+          ${alertCitation}
+          <div>
+            <button class="btn-bio-trigger" onclick="openBioModal(${index})">🔬 View Deep Biochemical Mechanism</button>
+          </div>
+        `;
+        alertsDiv.appendChild(card);
+      });
+
+      if (data.recommendations && data.recommendations.length > 0) {
+        const recSection = document.createElement("div");
+        recSection.style.marginTop = "1.25rem";
+        recSection.innerHTML = `<h4 style="color: #0f766e; margin-bottom: 0.6rem; font-weight: 800;">💡 ARPA Clinically Recommended Substitutes</h4>`;
+
+        data.recommendations.forEach(rec => {
+          const recCard = document.createElement("div");
+          recCard.style.cssText = "background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(45, 212, 191, 0.4); border-radius: 14px; padding: 0.85rem; margin-bottom: 0.6rem;";
+          let optionsHtml = rec.options.map(opt => `
+            <li style="margin-top: 0.35rem; font-size: 0.85rem; color:#334155;">
+              <strong style="color: #0d9488;">${opt.salt}</strong> (Formulations: <em>${opt.brands.join(", ")}</em>)<br/>
+              <span style="color: #64748b;">${opt.rationale}</span>
+            </li>
+          `).join("");
+
+          recCard.innerHTML = `
+            <div style="font-size: 0.85rem; color: #9f1239; font-weight: 800;">Trigger: ${rec.triggered_by}</div>
+            <div style="font-size: 0.8rem; color: #475569; margin-bottom: 0.4rem;">${rec.clinical_problem}</div>
+            <ul style="padding-left: 1.2rem;">${optionsHtml}</ul>
+          `;
+          recSection.appendChild(recCard);
+        });
+
+        alertsDiv.appendChild(recSection);
+      }
+    }
+
+    async function downloadPDF() {
+      const rawText = document.getElementById("medInputs").value;
+      const medicines = rawText.split(",").map(m => m.trim()).filter(m => m.length > 0);
+      const patient = getPatientProfile();
+
+      // API LINK 3 UPDATED HERE
+      const res = await fetch("http://127.0.0.1:8000/download-safety-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ medicines, patient })
+      });
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ARPA_Prescription_Audit_${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+  </script>
+</body>
+</html>

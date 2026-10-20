@@ -1,0 +1,21 @@
+.venv/
+.venv-*/
+venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+
+# Datasets, local DBs, reports
+*.csv
+*.db
+*.db-journal
+*.pdf
+*.doc
+*.jsp
+*.png
+output/
+
+# Logs & temp
+*.log
+*.tmp
